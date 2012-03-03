@@ -21,7 +21,7 @@ class Diaspora::Federated::Validator::Private
     if self.valid?
       object 
     else
-      raise self.errors.inspect
+      raise self.errors.full_messages.join
       FEDERATION_LOGGER.info("Failed Private Receive: #{self.errors.inspect}")
       nil
     end
@@ -35,8 +35,11 @@ class Diaspora::Federated::Validator::Private
 
   #weird
   def valid_signature_on_envelope?
-    unless sender.present? && self.salmon.verified_for_key?(sender.public_key)
-      errors.add :salmon, "sender failed key check"
+    if(sender.present? && !self.salmon.verified_for_key?(sender.public_key))
+      return false
+    else
+      true
+      #errors.add :salmon, "sender failed key check"
     end
   end
 
@@ -74,7 +77,7 @@ class Diaspora::Federated::Validator::Private
 
   def model_is_valid?
     unless object.valid?
-      errors.add :object, "Invalid Object: #{object.errors.inspect}"
+      errors.add :object, "Invalid Object: #{object.errors.full_messages.join}"
     end
   end
 end

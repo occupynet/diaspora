@@ -7,17 +7,43 @@ def only_error_message_should_include(partial_message)
 end
 
 describe Diaspora::Federated::Validator::Private do 
-  context 'validations' do
-    before do
-      #this sucks
-      salmon = stub(:verified_for_key => true)
-      @validator = Diaspora::Federated::Validator::Private.new(salmon, bob, alice.person)
-      @validator.stub(:object).and_return(Factory(:status_message, :author => alice.person))
+  before do
+    #this sucks
+    salmon = stub(:verified_for_key? => true)
+    @validator = Diaspora::Federated::Validator::Private.new(salmon, bob, alice.person)
+    @object = Factory.build(:status_message, :author => alice.person)
+    @validator.stub(:object).and_return(@object)
+  end
+
+  describe '#process!' do
+    it 'does not save the object' do
+      object = @validator.process!
+      object.should_not be_persisted
+    end 
+
+    it 'returns nil if salmon signature does not check out' do
+      @validator.stub(:valid_signature_on_envelope?).and_return false
+      @validator.process!.should be_nil
     end
 
+    it 'returns the object if the validator is valid' do
+      @validator.process!.should == @object
+    end
+
+    it 'raises an error if the validations fail #temporary' do
+      @validator.stub(:valid? => false)
+      expect{
+        @validator.process!
+      }.to raise_error
+    end
+
+  end
+
+  context 'validations' do
     it 'starts as a valid instance' do
       @validator.should be_valid
     end
+
 
     describe '#model_is_valid?' do
       it 'adds an error the associated model is not valid' do

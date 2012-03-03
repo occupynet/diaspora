@@ -27,7 +27,7 @@ class Postzord::Receiver::Private < Postzord::Receiver
   #called from xml provided by the outside world
   def receive!
     validator = Diaspora::Federated::Validator::Private.new(self.salmon, @user, @sender)
-    if self.object = validator.process!
+    if self.object = validator.process! #this should raise
       refreshed_object = accept_object_for_user #this SHOULD emit an instance of the object if it already exists
       post_receive_hooks(refreshed_object)
     else
