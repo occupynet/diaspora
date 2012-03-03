@@ -36,7 +36,6 @@ class Diaspora::Federated::Validator::Private
   #weird
   def valid_signature_on_envelope?
     unless sender.present? && self.salmon.verified_for_key?(sender.public_key)
-      raise "oh no"
       errors.add :salmon, "sender failed key check"
     end
   end
@@ -57,29 +56,25 @@ class Diaspora::Federated::Validator::Private
 
   def relayable_object_has_parent
     if object.respond_to?(:relayable?) && object.parent.nil?
-
-      raise "relayable"
       errors.add :base, "Relayable Object has no known parent."
     end
   end
 
   def contact_required
     unless object.is_a?(Request) || user.contact_for(sender).present?
-      raise "contact"
       errors.add :base, "Contact Required to receive object."
     end
   end
 
   def xml_author_matchs_a_known_party
     unless object.author.diaspora_handle == known_party
-      raise "xml"
       errors.add :base, "XML author does not match a known party."
     end
   end
 
   def model_is_valid?
     unless object.valid?
-      errors.add :base, "Invalid Object: #{object.errors.inspect}"
+      errors.add :object, "Invalid Object: #{object.errors.inspect}"
     end
   end
 end

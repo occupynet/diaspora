@@ -18,12 +18,14 @@ module Diaspora
       }
 
       def self.included(model)
-        lint_check(model)
+        unless MUTE
+          lint_check(model)
 
-        #type check federation methods to make sure they are giving us expected stuff
-        model.instance_eval do
-            alias_method_chain :receive, :lint
-            alias_method_chain :subscribers, :lint
+          #type check federation methods to make sure they are giving us expected stuff
+          model.instance_eval do
+              alias_method_chain :receive, :lint
+              alias_method_chain :subscribers, :lint
+          end
         end
       end
 
